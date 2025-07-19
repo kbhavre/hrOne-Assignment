@@ -5,7 +5,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Switch } from '../../components/ui/switch';
 import { X, Plus } from 'lucide-react';
 
-
 export interface SchemaField {
   id: string;
   name: string;
@@ -18,27 +17,25 @@ interface Props {
   field: SchemaField;
   index: number;
   nestingLevel: number;
-  onUpdate: (index: number, field: SchemaField) => void;
-  onDelete: (index: number) => void;
-  onAddChild: (parentIndex: number) => void;
-  onUpdateChild: (parentIndex: number, childIndex: number, child: SchemaField) => void;
-  onDeleteChild: (parentIndex: number, childIndex: number) => void;
+  levelPath: number[];
+  onUpdate: (path: number[], field: SchemaField) => void;
+  onDelete: (path: number[]) => void;
+  onAddChild: (path: number[]) => void;
 }
 
 const SchemaFieldComponent: React.FC<Props> = ({
   field,
   index,
   nestingLevel,
+  levelPath,
   onUpdate,
   onDelete,
-  onAddChild,
-  onUpdateChild,
-  onDeleteChild
+  onAddChild
 }) => {
   const marginLeft = nestingLevel * 40;
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onUpdate(index, { ...field, name: e.target.value });
+    onUpdate(levelPath, { ...field, name: e.target.value });
   };
 
   const handleTypeChange = (type: SchemaField['type']) => {
@@ -48,11 +45,11 @@ const SchemaFieldComponent: React.FC<Props> = ({
     } else if (!updatedField.children) {
       updatedField.children = [];
     }
-    onUpdate(index, updatedField);
+    onUpdate(levelPath, updatedField);
   };
 
   const handleRequiredChange = (required: boolean) => {
-    onUpdate(index, { ...field, required });
+    onUpdate(levelPath, { ...field, required });
   };
 
   return (
@@ -80,7 +77,7 @@ const SchemaFieldComponent: React.FC<Props> = ({
 
         <Switch checked={field.required} onCheckedChange={handleRequiredChange} />
 
-        <Button onClick={() => onDelete(index)} variant="ghost" size="sm" className="p-2 hover:bg-red-50 hover:text-red-600">
+        <Button onClick={() => onDelete(levelPath)} variant="ghost" size="sm" className="p-2 hover:bg-red-50 hover:text-red-600">
           <X className="h-4 w-4" />
         </Button>
       </div>
@@ -93,23 +90,23 @@ const SchemaFieldComponent: React.FC<Props> = ({
               field={child}
               index={childIndex}
               nestingLevel={nestingLevel + 1}
-              onUpdate={(i, updated) => onUpdateChild(index, i, updated)}
-              onDelete={(i) => onDeleteChild(index, i)}
+              levelPath={[...levelPath, childIndex]}
+              onUpdate={onUpdate}
+              onDelete={onDelete}
               onAddChild={onAddChild}
-              onUpdateChild={onUpdateChild}
-              onDeleteChild={onDeleteChild}
             />
           ))}
-         <div className="flex gap-2 mt-3 ml-10">
-  <Button
-    type="button"
-    onClick={() => onAddChild(index)}
-    className="bg-blue-600 w-full hover:bg-blue-700 text-white"
-  >
-    <Plus className="h-4 w-4" />
-     Add Item
-  </Button>
-</div>
+
+          <div className="flex gap-2 mt-3 ml-[144px]">
+            <Button
+              type="button"
+              onClick={() => onAddChild(levelPath)}
+              className="bg-blue-600 w-full hover:bg-blue-700 text-white"
+            >
+              <Plus className="h-4 w-4" />
+              Add Item
+            </Button>
+          </div>
         </div>
       )}
     </div>

@@ -19,57 +19,40 @@ const JsonSchemaBuilder: React.FC = () => {
   const fields = watch('schema') || [];
   const [jsonPreview, setJsonPreview] = useState('{}');
 
-  const updateField = (index: number, field: SchemaField) => {
-    const updatedFields = [...fields];
-    updatedFields[index] = field;
-    setValue('schema', updatedFields);
+  const setByPath = (path: number[], updatedField: SchemaField) => {
+    const clone = JSON.parse(JSON.stringify(fields));
+    let curr = clone;
+    for (let i = 0; i < path.length - 1; i++) {
+      curr = curr[path[i]].children!;
+    }
+    curr[path[path.length - 1]] = updatedField;
+    setValue('schema', clone);
   };
 
-  const deleteField = (index: number) => {
-    const updatedFields = fields.filter((_, i) => i !== index);
-    setValue('schema', updatedFields);
+  const deleteByPath = (path: number[]) => {
+    const clone = JSON.parse(JSON.stringify(fields));
+    let curr = clone;
+    for (let i = 0; i < path.length - 1; i++) {
+      curr = curr[path[i]].children!;
+    }
+    curr.splice(path[path.length - 1], 1);
+    setValue('schema', clone);
   };
 
-  const addField = () => {
+  const addChildByPath = (path: number[]) => {
+    const clone = JSON.parse(JSON.stringify(fields));
     const newField: SchemaField = {
       id: Date.now().toString(),
       name: '',
       type: 'string',
       required: false,
     };
-    setValue('schema', [...fields, newField]);
-  };
-
-  const addChildField = (parentIndex: number) => {
-    const updatedFields = [...fields];
-    const parent = updatedFields[parentIndex];
-    const newChild: SchemaField = {
-      id: Date.now().toString(),
-      name: '',
-      type: 'string',
-      required: false,
-    };
-
-    parent.children = [...(parent.children || []), newChild];
-    updatedFields[parentIndex] = parent;
-    setValue('schema', updatedFields);
-  };
-
-  const updateChildField = (parentIndex: number, childIndex: number, child: SchemaField) => {
-    const updatedFields = [...fields];
-    const parent = updatedFields[parentIndex];
-    if (!parent.children) parent.children = [];
-    parent.children[childIndex] = child;
-    updatedFields[parentIndex] = parent;
-    setValue('schema', updatedFields);
-  };
-
-  const deleteChildField = (parentIndex: number, childIndex: number) => {
-    const updatedFields = [...fields];
-    const parent = updatedFields[parentIndex];
-    parent.children = (parent.children || []).filter((_, i) => i !== childIndex);
-    updatedFields[parentIndex] = parent;
-    setValue('schema', updatedFields);
+    let curr = clone;
+    for (let i = 0; i < path.length; i++) {
+      curr = curr[path[i]].children!;
+    }
+    curr.push(newField);
+    setValue('schema', clone);
   };
 
   const generateJsonSchema = (fields: SchemaField[]): any => {
@@ -106,17 +89,26 @@ const JsonSchemaBuilder: React.FC = () => {
             field={field}
             index={index}
             nestingLevel={0}
-            onUpdate={updateField}
-            onDelete={deleteField}
-            onAddChild={addChildField}
-            onUpdateChild={updateChildField}
-            onDeleteChild={deleteChildField}
+            levelPath={[index]}
+            onUpdate={setByPath}
+            onDelete={deleteByPath}
+            onAddChild={addChildByPath}
           />
         ))}
 
         <Button
           type="button"
-          onClick={addField}
+          onClick={() =>
+            setValue('schema', [
+              ...fields,
+              {
+                id: Date.now().toString(),
+                name: '',
+                type: 'string',
+                required: false,
+              },
+            ])
+          }
           className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
         >
           <Plus className="h-4 w-4 mr-2" />

@@ -3,8 +3,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Switch } from '../../components/ui/switch';
-import { Trash2, Plus } from 'lucide-react';
-
+import { X, Plus } from 'lucide-react';
 
 
 export interface SchemaField {
@@ -82,7 +81,7 @@ const SchemaFieldComponent: React.FC<Props> = ({
         <Switch checked={field.required} onCheckedChange={handleRequiredChange} />
 
         <Button onClick={() => onDelete(index)} variant="ghost" size="sm" className="p-2 hover:bg-red-50 hover:text-red-600">
-          <Trash2 className="h-4 w-4" />
+          <X className="h-4 w-4" />
         </Button>
       </div>
 
@@ -101,14 +100,16 @@ const SchemaFieldComponent: React.FC<Props> = ({
               onDeleteChild={onDeleteChild}
             />
           ))}
-          <Button
-            onClick={() => onAddChild(index)}
-            className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white"
-            style={{ marginLeft: 40 }}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            + Add Item
-          </Button>
+         <div className="flex gap-2 mt-3 ml-10">
+  <Button
+    type="button"
+    onClick={() => onAddChild(index)}
+    className="bg-blue-600 w-full hover:bg-blue-700 text-white"
+  >
+    <Plus className="h-4 w-4" />
+     Add Item
+  </Button>
+</div>
         </div>
       )}
     </div>

@@ -1,22 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import SchemaFieldComponent, { type SchemaField } from '../components/SchemaFieldComponent'
-import JsonPreview from '../components/JsonPreview'
+import React, { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import SchemaFieldComponent, { type SchemaField } from '../components/SchemaFieldComponent';
+import JsonPreview from '../components/JsonPreview';
 import { Button } from '../../components/ui/button';
-import { Plus } from 'lucide-react';const JsonSchemaBuilder: React.FC = () => {
-  // ✅ Start with empty fields
-  const [fields, setFields] = useState<SchemaField[]>([]);
+import { Plus } from 'lucide-react';
+
+type FormValues = {
+  schema: SchemaField[];
+};
+
+const JsonSchemaBuilder: React.FC = () => {
+  const { handleSubmit, control, watch, setValue } = useForm<FormValues>({
+    defaultValues: {
+      schema: [],
+    },
+  });
+
+  const fields = watch('schema') || [];
   const [jsonPreview, setJsonPreview] = useState('{}');
 
   const updateField = (index: number, field: SchemaField) => {
-    setFields(prev => {
-      const updated = [...prev];
-      updated[index] = field;
-      return updated;
-    });
+    const updatedFields = [...fields];
+    updatedFields[index] = field;
+    setValue('schema', updatedFields);
   };
 
   const deleteField = (index: number) => {
-    setFields(prev => prev.filter((_, i) => i !== index));
+    const updatedFields = fields.filter((_, i) => i !== index);
+    setValue('schema', updatedFields);
   };
 
   const addField = () => {
@@ -24,43 +35,41 @@ import { Plus } from 'lucide-react';const JsonSchemaBuilder: React.FC = () => {
       id: Date.now().toString(),
       name: '',
       type: 'string',
-      required: false
+      required: false,
     };
-    setFields(prev => [...prev, newField]);
+    setValue('schema', [...fields, newField]);
   };
 
   const addChildField = (parentIndex: number) => {
+    const updatedFields = [...fields];
+    const parent = updatedFields[parentIndex];
     const newChild: SchemaField = {
       id: Date.now().toString(),
       name: '',
       type: 'string',
-      required: false
+      required: false,
     };
-    setFields(prev => {
-      const updated = [...prev];
-      const children = [...(updated[parentIndex].children || []), newChild];
-      updated[parentIndex] = { ...updated[parentIndex], children };
-      return updated;
-    });
+
+    parent.children = [...(parent.children || []), newChild];
+    updatedFields[parentIndex] = parent;
+    setValue('schema', updatedFields);
   };
 
   const updateChildField = (parentIndex: number, childIndex: number, child: SchemaField) => {
-    setFields(prev => {
-      const updated = [...prev];
-      const children = [...(updated[parentIndex].children || [])];
-      children[childIndex] = child;
-      updated[parentIndex] = { ...updated[parentIndex], children };
-      return updated;
-    });
+    const updatedFields = [...fields];
+    const parent = updatedFields[parentIndex];
+    if (!parent.children) parent.children = [];
+    parent.children[childIndex] = child;
+    updatedFields[parentIndex] = parent;
+    setValue('schema', updatedFields);
   };
 
   const deleteChildField = (parentIndex: number, childIndex: number) => {
-    setFields(prev => {
-      const updated = [...prev];
-      const children = (updated[parentIndex].children || []).filter((_, i) => i !== childIndex);
-      updated[parentIndex] = { ...updated[parentIndex], children };
-      return updated;
-    });
+    const updatedFields = [...fields];
+    const parent = updatedFields[parentIndex];
+    parent.children = (parent.children || []).filter((_, i) => i !== childIndex);
+    updatedFields[parentIndex] = parent;
+    setValue('schema', updatedFields);
   };
 
   const generateJsonSchema = (fields: SchemaField[]): any => {
@@ -78,11 +87,18 @@ import { Plus } from 'lucide-react';const JsonSchemaBuilder: React.FC = () => {
   };
 
   useEffect(() => {
-    setJsonPreview(JSON.stringify(generateJsonSchema(fields), null, 2));
+    const json = generateJsonSchema(fields);
+    setJsonPreview(JSON.stringify(json, null, 2));
   }, [fields]);
 
+  const onSubmit = (data: FormValues) => {
+    console.log('Submitted Schema:', data.schema);
+    console.log('Generated JSON:', generateJsonSchema(data.schema));
+    alert('Schema submitted!');
+  };
+
   return (
-    <div className="flex h-screen bg-gray-50">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex h-screen bg-gray-50">
       <div className="flex-1 p-6 overflow-auto space-y-4">
         {fields.map((field, index) => (
           <SchemaFieldComponent
@@ -97,16 +113,26 @@ import { Plus } from 'lucide-react';const JsonSchemaBuilder: React.FC = () => {
             onDeleteChild={deleteChildField}
           />
         ))}
+
         <Button
+          type="button"
           onClick={addField}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
         >
           <Plus className="h-4 w-4 mr-2" />
-          + Add Item
+          Add Item
+        </Button>
+
+        <Button
+          type="submit"
+          className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white py-3"
+        >
+          Submit Schema
         </Button>
       </div>
+
       <JsonPreview json={jsonPreview} />
-    </div>
+    </form>
   );
 };
 

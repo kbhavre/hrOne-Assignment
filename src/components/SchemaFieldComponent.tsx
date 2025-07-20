@@ -25,7 +25,6 @@ interface Props {
 
 const SchemaFieldComponent: React.FC<Props> = ({
   field,
-  index,
   nestingLevel,
   levelPath,
   onUpdate,

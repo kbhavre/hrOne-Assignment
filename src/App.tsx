@@ -1,4 +1,3 @@
-import React from 'react'
 import JsonSchemaBuilder from './pages/JsonSchemaBuilder'
 
 

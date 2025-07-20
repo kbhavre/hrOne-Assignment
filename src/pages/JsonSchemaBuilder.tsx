@@ -10,7 +10,7 @@ type FormValues = {
 };
 
 const JsonSchemaBuilder: React.FC = () => {
-  const { handleSubmit, control, watch, setValue } = useForm<FormValues>({
+  const { handleSubmit, watch, setValue } = useForm<FormValues>({
     defaultValues: {
       schema: [],
     },
